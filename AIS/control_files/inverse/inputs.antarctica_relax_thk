@@ -25,7 +25,7 @@ patersonRate.epsSqr0 = 1.0e-12
 #geometry & basal friction input data
 geometry.problem_type = LevelData
 
-inputLevelData.geometryFile =  .//antarctica_bedmachine_geometry_500m.2d.hdf5
+inputLevelData.geometryFile =  ../../../data/AIS/inverse/steph_package/relax_thermodynamics/antarctica_bedmachine_geometry_500m.2d.hdf5
 inputLevelData.thicknessName = thk
 inputLevelData.topographyName = topg
 
@@ -35,12 +35,12 @@ inputLevelData.topographyName = topg
 
 #temperature data 
 temperature.type = LevelData
-inputLevelData.internalEnergyFile = .//plot.thermodynamic.mar.ghf.485600.2d.hdf5
+inputLevelData.internalEnergyFile = ../../../data/AIS/inverse/steph_package/relax_thermodynamics/plot.thermodynamic.mar.ghf.485600.2d.hdf5
 inputLevelData.internalEnergyName = internalEnergy0000
 inputLevelData.readInternalEnergy = true
 
 geometry.beta_type = LevelData
-inputLevelData.frictionFile = .//antarctica_bedmachine_c_one_init_500m.2d.hdf5
+inputLevelData.frictionFile = ../../../data/AIS/inverse/steph_package/relax_thermodynamics/antarctica_bedmachine_c_one_init_500m.2d.hdf5
 inputLevelData.frictionName = c_one
 
 #basal friction relation parameters
@@ -78,7 +78,7 @@ surfaceFlux.type = LevelData
 surfaceFlux.n = 1
 surfaceFlux.timeStep = 1.0e+10
 surfaceFlux.startTime = 0.0
-surfaceFlux.fileFormat = .//antarctica.mon-SMB-MAR_ERA5-1980-2021.mean.smb.hdf5
+surfaceFlux.fileFormat = ../../../data/AIS/inverse/steph_package/relax_thermodynamics/antarctica.mon-SMB-MAR_ERA5-1980-2021.mean.smb.hdf5
 surfaceFlux.name = SMB
 
 amr.grounding_line_proximity_scale = 1.0e+4
@@ -256,7 +256,7 @@ surfaceHeatBoundaryData.Dirichlett = true
 surfaceHeatBoundaryData.Temperature = true 
 surfaceHeatBoundaryData.type = LevelData
 #surfaceHeatBoundaryData.flux_value = 248 # K
-surfaceHeatBoundaryData.fileFormat = .//antarctica.mon-ST-MAR_ERA5-1980-2021.mean.sfctemp.hdf5
+surfaceHeatBoundaryData.fileFormat = ../../../data/AIS/inverse/steph_package/relax_thermodynamics/antarctica.mon-ST-MAR_ERA5-1980-2021.mean.sfctemp.hdf5
 surfaceHeatBoundaryData.name = sfctemp
 surfaceHeatBoundaryData.n = 1
 surfaceHeatBoundaryData.timeStep = 1.0e+10
@@ -266,7 +266,7 @@ surfaceHeatBoundaryData.startTime = 0.0
 #geothermal heat flux
 basalHeatBoundaryData.type = LevelData
 #basalHeatBoundaryData.flux_value = 32000 # J/a/m^2
-basalHeatBoundaryData.fileFormat = .//antarctica.Mean.ghf.hdf5
+basalHeatBoundaryData.fileFormat = ../../../data/AIS/inverse/steph_package/relax_thermodynamics/antarctica.Mean.ghf.hdf5
 basalHeatBoundaryData.name = GHF
 basalHeatBoundaryData.n = 1
 basalHeatBoundaryData.timeStep = 1.0e+10
@@ -283,7 +283,7 @@ control.velMisfitType = speed # match observed speed (not velocity)
 control.outerStepFileNameBase = ctrl.relax_thk.
 #field of data expressing confidence in speed observations. 0 for no confidence
 control.velCoef.type = LevelData
-control.velCoef.fileFormat =  .//antarctica_bedmachine_velocity_500m.2d.hdf5
+control.velCoef.fileFormat =  ../../../data/AIS/inverse/steph_package/relax_thermodynamics/antarctica_bedmachine_velocity_500m.2d.hdf5
 control.velCoef.name = umodc
 control.velCoef.n = 4
 control.velCoef.startTime = 0.0
@@ -292,7 +292,7 @@ control.velCoef.offset = 0
 control.velCoef.linearInterp = false
 #x-component of the observed velocity (could be the speed)
 control.xVel.type = LevelData
-control.xVel.fileFormat = .//antarctica_bedmachine_velocity_500m.2d.hdf5
+control.xVel.fileFormat = ../../../data/AIS/inverse/steph_package/relax_thermodynamics/antarctica_bedmachine_velocity_500m.2d.hdf5
 control.xVel.name = umod
 control.xVel.n = 4
 control.xVel.startTime = 0.0

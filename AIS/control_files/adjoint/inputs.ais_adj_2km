@@ -1,0 +1,347 @@
+#Set CGmaxIter to 0, so it does initial calculations before outputing mu and c grads
+##Give it a /full/ field of speed observations that are /zero everywhere/ to make adjoint RHS equal to |u|^2
+##Make the initial guesses the C and phi fields from the inverse problem
+##Keep control.velMisfitType=speed
+##Make sure all regularisation fields are set to zero, so we are just calculating gradient wrt int(|u|^2)
+##Set JFNKSolver.solverType=0 for JFNK solver, rather than 4 for PETSC
+# changed amr.tag_on_grad_velocity from 0 to 1
+
+
+main.poutBaseName = pout.ais_adj_500m_jgnd
+#domain details
+main.domain_size = 6144e+3 6144e+3 1.0e+3
+amr.num_cells = 768 768 24 # 8km 
+
+amr.is_periodic = 0 0 0
+amr.sigma = 0.0 0.1663 0.3179 0.4547 0.5768 0.6842 0.7768 0.8547 0.9179 0.9663 1
+amr.sigma = 0.0 0.0712603   0.14191442  0.21137662  0.27910062  0.3445959
+  0.40744022  0.46728806  0.52387456  0.5770154   0.62660312  0.67260068
+  0.71503302  0.75397751  0.78955403  0.82191523  0.85123747  0.87771266
+  0.90154127  0.92292652  0.94206966  0.95916636  0.97440401  0.98795991
+  1.
+  
+#bulk constitutive relation and parameters
+main.constitutiveRelation = L1L2
+L1L2.layerCoarsening = 1
+
+#amr.additional_velocity = true
+#amr.diffusion_treatment = implicit
+L1L2.additionalVelocitySIAGradSLimit = 1.0e-3
+L1L2.effectiveViscositySIAGradSLimit = 1.0e-3
+main.rateFactor = patersonRate
+patersonRate.epsSqr0 = 1.0e-12
+
+#geometry & basal friction input data
+geometry.problem_type = LevelData
+
+inputLevelData.geometryFile =  /resstore/b0133/eetss/BISICLES/diagnostic_damage_study/data/AIS/inverse/steph_package/relax_thermodynamics/antarctica_bedmachine_geometry_500m.2d-002.hdf5
+inputLevelData.thicknessName = thk
+inputLevelData.topographyName = topg
+
+#muCoefficient.type = LevelData
+#inputLevelData.muCoefFile = ...
+#inputLevelData
+
+#temperature data 
+temperature.type = LevelData
+inputLevelData.internalEnergyFile = /resstore/b0133/eetss/BISICLES/diagnostic_damage_study/data/AIS/inverse/steph_package/relax_thermodynamics/plot.thermodynamic.mar.ghf.485600.2d.hdf5
+inputLevelData.internalEnergyName = internalEnergy0000
+inputLevelData.readInternalEnergy = true
+
+
+#mucoef parameters
+muCoefficient.type = LevelData
+inputLevelData.muCoefFile = /resstore/b0133/eetss/BISICLES/diagnostic_damage_study/data/AIS/adjoint/inv_2km_no_dreg/AIS_thermo_c_reg_clm_heal_none_jgnd.hdf5
+inputLevelData.muCoefName = mucoef
+
+
+#basal friction relation parameters
+geometry.beta_type = LevelData
+inputLevelData.frictionFile = /resstore/b0133/eetss/BISICLES/diagnostic_damage_study/data/AIS/adjoint/inv_2km_no_dreg/AIS_thermo_c_reg_clm_heal_none_jgnd.hdf5
+
+
+#Not pressure limited
+main.basalFrictionRelation = powerLaw
+
+#Pressure limited 
+#main.basalFrictionRelation = pressureLimitedLaw
+#BasalFrictionPressureLimitedLaw.coefficient = 1.0
+BasalFrictionPressureLimitedLaw.basalFrictionRelation = powerLaw
+
+#Joughin
+#BasalFrictionPowerLaw.fastSlidingSpeed = 75
+#inputLevelData.frictionName = c_third_jreg_75
+#BasalFrictionPowerLaw.m = 0.33333
+
+#Weertman
+#inputLevelData.frictionName = c_third
+#BasalFrictionPowerLaw.m = 0.33333
+
+#Linear
+inputLevelData.frictionName = c_one
+BasalFrictionPowerLaw.m = 1.0
+
+#physical constants
+constants.ice_density=917.0
+constants.sea_water_density=1027.0
+
+#surface fluxes
+#surfaceFlux.type = constantFlux
+#surfaceFlux.flux_value = 0.3
+
+surfaceFlux.type = LevelData
+surfaceFlux.n = 1
+surfaceFlux.timeStep = 1.0e+10
+surfaceFlux.startTime = 0.0
+surfaceFlux.fileFormat = /resstore/b0133/eetss/BISICLES/diagnostic_damage_study/data/AIS/inverse/steph_package/relax_thermodynamics/antarctica.mon-SMB-MAR_ERA5-1980-2021.mean.smb.hdf5
+surfaceFlux.name = SMB
+
+amr.grounding_line_proximity_scale = 1.0e+4
+amr.grounding_line_proximity_calc_type = 1
+
+
+amr.floating_ice_basal_flux_is_dhdt = true
+#amr.grounded_ice_basal_flux_is_dhdt = true
+basalFlux.type = maskedFlux
+basalFlux.grounded.type = constantFlux
+basalFlux.grounded.flux_value = 0.0
+
+basalFlux.floating.flux_value = 0
+
+#calving model - don't let the front advance
+CalvingModel.type = FixedFrontCalvingModel
+CalvingModel.min_thickness = 10.0
+
+#velocity solve type -- 0 = Picard, 1 = JFNK
+amr.velocity_solver_type = 1
+
+#initial guess 
+amr.do_initial_velocity_guess = 1
+amr.do_initial_velocity_solve = 1
+amr.initial_velocity_guess_type = 1 # linear PDE
+amr.initial_velocity_guess_const_mu = 2.9e+6
+amr.initial_velocity_guess_solver_type = 1 #JFNK
+
+
+#JFNK parameters
+JFNKSolver.vtopSafety = 0.95
+JFNKSolver.minPicardIterations = 20	#3
+JFNKSolver.maxIter = 20
+JFNKSolver.absTol = 1.0
+JFNKSolver.relTol = 1.0e-4
+JFNKSolver.solverType = 0 #Relax solver
+#JFNKSolver.solverType = 4 #PETSC
+JFNKSolver.RelaxRelTol = 1.0e-3
+JFNKSolver.RelaxHang = 0.95
+JFNKSolver.maxRelaxIter = 20
+JFNKSolver.normType = 2
+JFNKSolver.verbosity = 5
+JFNKSolver.vtopRelaxTol = 0.005
+JFNKSolver.vtopRelaxMinIter = 8
+JFNKSolver.numMGSmooth = 8
+JFNKSolver.numMGIter = 1
+JFNKSolver.h = 0.025
+JFNKSolver.switchRate = 1.6
+#JFNKSolver.writeResiduals = true
+#JFNKSolver.muMin = 1.0e+4
+#JFNKSolver.uMaxAbs = 1.0e+6
+
+JFNKSolver.artificialDragCoef = 1.0e-4	# 1 failed
+JFNKSolver.artificialDragPower = 8
+velocity_rhs.max_rhs_dx = 1.0e+9 # steep slopes
+JFNKSolver.eliminateFastIce = true
+#JFNKSolver.eliminateFastIceEdgeOnly = true
+JFNKSolver.eliminateFastIceSpeed = 2.0e+4	#5.0e+5
+JFNKSolver.eliminateRemoteIceTol = 2.0
+JFNKSolver.eliminateRemoteIceMaxIter = 16
+
+amr.eliminate_remote_ice = true
+amr.eliminate_remote_ice_max_iter = 16
+amr.eliminate_remote_ice_tol = 2.0
+amr.eliminate_remote_ice_after_regrid = true
+
+#time stepping
+main.maxTime = 0  # maximum time to run to
+main.maxStep = 0  # maximum number of steps to runx
+amr.temporal_accuracy = 1
+amr.cfl = 0.25  
+amr.initial_cfl = 0.25  
+amr.max_dt_grow_factor = 2.0 
+amr.time_step_ticks = 0
+#amr.fixed_dt = 1.0
+amr.evolve_thickness = true
+#amr.offsetTime = 2007.0
+
+#plotting options
+amr.plot_interval = 32
+#amr.plot_time_interval = 0.5
+amr.plot_prefix = plot.ais_adj_500m_jgnd.
+#amr.write_preSolve_plotfiles = true
+amr.write_solver_rhs = 1
+amr.write_viscous_tensor = true
+amr.write_thickness_sources = true
+#check points
+amr.check_interval = 1
+amr.check_prefix = chk.ais_adj_500m_jgnd.
+amr.check_overwrite = 0
+#
+
+# CF compliant files
+#amr.plot_style_cf = true
+#amr.plot_style_amr = false # leave out to have both sorts of file
+#CFIO.land_ice_thickness = true # note the form: CFIO.standard_name = true
+#CFIO.land_ice_basal_velocity = true
+#CFIO.surface_altitude = true
+#CFIO.bedrock_altitude = true
+#CFIO.whole_domain_diagnostics = true # write ice volume, etc.
+
+CFIO.lithk =  true
+CFIO.orog =  0
+CFIO.topg =  true
+CFIO.velbase =  true
+CFIO.velsurf =  true
+CFIO.litemptop =  0
+CFIO.litempbot =  0
+CFIO.litempbotgr =  0
+CFIO.litempbotfl =  0
+CFIO.sftgif =  0
+CFIO.sftgrf =  0
+CFIO.sftflf =  0
+CFIO.dlithkdt =  true
+CFIO.acabf =  0
+CFIO.libmassbf =  0
+CFIO.libmassbfgr =  0
+CFIO.libmassbffl =  0
+CFIO.lifmassbf =  0
+CFIO.licalvf =  0
+CFIO.strbasemag =  0
+CFIO.hfgeoubed =  0
+
+
+#specify the coordinate system - optional for BISICLES but needed for CF compliance
+CRS.EPSG = 3031 # EPSG is the only system supported for now
+CRS.origin_x = -1838250 #1.234 # the coordinates of the point (0,0) on (all) BISICLES levels 
+CRS.origin_y = -880250 #5.678 # (measured in metres)
+
+
+
+#AMR mesh options
+amr.maxLevel = 10 # finest level allowed in simulation
+amr.ref_ratio = 2 2 2 2 2 2 2 2 2 2 2
+amr.regrid_interval = 32000	#4  # number of timesteps between regridding
+amr.blockFactor = 16      # block factor used in grid generation
+amr.fill_ratio = 0.85    # how efficient are the grids
+amr.nestingRadius = 1    # proper nesting radius required
+amr.tags_grow = 4        # amount to buffer tags
+#amr.tagSubsetBoxesFile = ../../tag_subset.ase_ase
+amr.tagCap = 1  #2:4000->2000->1000-500 m 	3: 4000->2000->1000->500-250 m
+amr.interpolate_zb = 0 #go back to the IBC to regrid geometry
+amr.max_box_size = 32        # largest box length allowed
+
+#AMR tagging
+amr.tag_on_grad_velocity = 1
+
+#amr.tag_on_grounded_laplacian_velocity = 0
+#amr.lap_vel_tagging_val = 150
+
+amr.tag_grounding_line = 1
+amr.grounding_line_tagging_min_vel = 20.0
+
+amr.tag_vel_dx = 1
+amr.vel_dx_tagging_val = 5.0e+5
+amr.vel_dx_finest_level_grounded = 4
+amr.vel_dx_finest_level_floating = 2
+
+#misc options
+amr.verbosity = 5
+
+#tag thin submarine cavities in an attempt to refine around pinning points
+amr.tag_thin_cavity = true
+amr.tag_thin_cavity_thickness = 50.0
+
+#thermodynamics
+amr.isothermal = false
+#constant temperature initial state
+#temperature.type = constant
+#temperature.value = 248 #K
+
+#surface temperature
+#treat 'flux' as though it read 'temperature'
+surfaceHeatBoundaryData.Dirichlett = true   
+surfaceHeatBoundaryData.Temperature = true 
+surfaceHeatBoundaryData.type = LevelData
+#surfaceHeatBoundaryData.flux_value = 248 # K
+surfaceHeatBoundaryData.fileFormat = /resstore/b0133/eetss/BISICLES/diagnostic_damage_study/data/AIS/inverse/steph_package/relax_thermodynamics/antarctica.mon-ST-MAR_ERA5-1980-2021.mean.sfctemp.hdf5
+surfaceHeatBoundaryData.name = sfctemp
+surfaceHeatBoundaryData.n = 1
+surfaceHeatBoundaryData.timeStep = 1.0e+10
+surfaceHeatBoundaryData.startTime = 0.0
+
+
+#geothermal heat flux
+basalHeatBoundaryData.type = LevelData
+#basalHeatBoundaryData.flux_value = 32000 # J/a/m^2
+basalHeatBoundaryData.fileFormat = /resstore/b0133/eetss/BISICLES/diagnostic_damage_study/data/AIS/inverse/steph_package/relax_thermodynamics/antarctica.Mean.ghf.hdf5
+basalHeatBoundaryData.name = GHF
+basalHeatBoundaryData.n = 1
+basalHeatBoundaryData.timeStep = 1.0e+10
+basalHeatBoundaryData.startTime = 0.0
+
+
+#on this attempt, try to maintain a velocity close to obs
+#by solving the inverse problme once then never regridding
+amr.velocity_solve_interval = 4
+amr.regrid_interval = 320000
+
+amr.velocity_solver_type = 6 # Inverse problem !
+control.velMisfitType = speed # match observed speed (not velocity)    
+control.outerStepFileNameBase = ctrl.ais_adj_500m_jgnd.
+#field of data expressing confidence in speed observations. 0 for no confidence
+control.velCoef.type = LevelData
+control.velCoef.fileFormat =  /resstore/b0133/eetss/BISICLES/diagnostic_damage_study/data/AIS/adjoint/inv_2km_no_dreg/AIS_thermo_c_reg_clm_heal_none_jgnd.hdf5
+control.velCoef.name = uc
+control.velCoef.n = 4
+control.velCoef.startTime = 0.0
+control.velCoef.timeStep = 100.0
+control.velCoef.offset = 0
+control.velCoef.linearInterp = false
+#x-component of the observed velocity (could be the speed)
+control.xVel.type = LevelData
+control.xVel.fileFormat = /resstore/b0133/eetss/BISICLES/diagnostic_damage_study/data/AIS/adjoint/inv_2km_no_dreg/AIS_thermo_c_reg_clm_heal_none_jgnd.hdf5
+control.xVel.name = uo
+control.xVel.n = 4
+control.xVel.startTime = 0.0
+control.xVel.timeStep = 100.0
+control.xVel.offset = 0
+control.xVel.linearInterp = false
+
+#Tikhonov regularization coefficients
+control.gradCsqRegularization = 0
+control.gradMuCoefsqRegularization = 0
+
+#some box constraints. 
+control.boundMethod = Projection
+control.lowerX0 = -5
+control.upperX0 = 5.0
+control.lowerX1 = -3.0
+control.upperX1 = 0.025    
+control.writeInnerSteps = false
+control.CGmaxIter = 0 # It will do the initial calculation of the forward problem, calc the adjoint vels and gradient, and output a file!
+control.CGhang = 0.999999
+control.CGsecantMaxIter = 20
+control.CGsecantParameter = 1.0e-7
+control.initialLowerC = 1.0
+control.initialUpperC = 1.0e+5
+control.initialLowerMuCoef = 0.01
+control.initialUpperMuCoef = 1.01
+
+control.minLevelForOptimization = 2		# should be amr.tagCap + 1
+control.minTimeBetweenOptimizations = 0.25
+control.dtTypical = 0.01 # accomadate 100 time steps per year
+
+#output
+amr.plot_interval = 0
+amr.check_interval = 0
+amr.write_internal_energy = true
+
+#amr.restart_file = /nobackup/eetss/BISICLES/diagnostic_damage_study/inverse_no_dreg/2km_run/ctrl.relax_thk.02lev.000103000005.2d.hdf5
